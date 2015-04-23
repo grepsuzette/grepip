@@ -17,7 +17,7 @@ $progName v$version - filter in IPv4 addresses using GNU grep, one per line
 Syntax: $progName [OPTIONS]
 
 OPTIONS:
- -x --no-local      Exclude local ips (127.0.*, 10.*, 172.16.*-172.31.*)
+ -x --no-local      Exclude local ips (127.0.*, 10.*, 172.16.*-172.31.*, 192.168.*)
  --help -h          Show help
  --version -v       Show version and exit
 EOF
