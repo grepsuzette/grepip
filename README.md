@@ -4,7 +4,7 @@
 Examples
 ----------
 
-Let's suppose we have a random command showing along a few IPs to stdout:
+Say we have this:
 
 ```bash
 $ nslookup rackspace.com
@@ -16,7 +16,7 @@ Name:	rackspace.com
 Address: 173.203.44.122
 ```
 
-We can use **grepip** so that only IPv4 get displayed:
+Let's filter in IP addresses (IPv4 only for the time being):
 
 ```bash
 $ nslookup rackspace.com | grepip
@@ -25,8 +25,7 @@ $ nslookup rackspace.com | grepip
 173.203.44.122
 ```
 
-The *--no-local* option, AKA *-x*, will exclude local IPv4 addresses.
-In short, it will not show IPs like 192.168.x.x, 10.x.x.x and some of the 172.x.x.x (more details see code or RFC 1918).
+Let's exclude local IPs (see RFC1918):
 
 ```bash
 $ nslookup rackspace.com | grepip -x
