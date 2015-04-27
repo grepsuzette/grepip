@@ -31,8 +31,8 @@ Syntax: somecommand | $progName [OPTIONS]
 
 OPTIONS:
  -x --no-local      Exclude local IPs
-                     For IPv4, this is 127.0.*, 10.*, 172.16.*-172.31.*, 192.168.*
-                     For IPv6, this is ::/0, ::1/128, fe80:/10, fc00:/7 
+                     For IPv4: 127.0.*, 10.*, 172.16.*-172.31.*, 192.168.*
+                     For IPv6: ::/0, ::1/128, fe80:/10, fc00:/7 
  -4                 Enable IPv4 mode (the default)
  -6                 Enable IPv6 mode
  --help -h          Show help and exit

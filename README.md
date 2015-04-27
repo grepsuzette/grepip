@@ -1,7 +1,25 @@
 # grepip
-A simple bash script to filter in IPv4 addresses using GNU grep, one per line. It can also filter IPv6 addresses/masks.
+A simple bash filter to show IPv4 addresses or IPv6 addresses/masks using GNU grep, one per line.
 
 *Disclaimer: this script is intended for console work only. For integration inside languages use the tools provided by your language (e.g.: in Java see InetAddress, in .NET see IPAddress etc). The reasons for this is 1) any implementation using regular expressions may have bugs and 2) this depends on GNU grep, therefore it depends on the environment and may not be conveniently deployed).*
+
+Usage
+-------
+```bash
+$ grepip -h
+grepip v0.2 - extract and show IP addresses (IPv4 or IPv6), one per line
+Syntax: somecommand | grepip [OPTIONS]
+
+OPTIONS:
+ -x --no-local      Exclude local IPs
+                     For IPv4 exclude 127.0.*, 10.*, 172.16.*-172.31.*,
+192.168.*
+                     For IPv6 exclude ::/0, ::1/128, fe80:/10, fc00:/7 
+ -4                 Enable IPv4 mode (the default)
+ -6                 Enable IPv6 mode
+ --help -h          Show help and exit
+ --version -v       Show version and exit
+```
 
 IPv4 examples
 ----------
@@ -55,7 +73,7 @@ ff00::/8                       ::                         U    256 0     0 eth0
 As before we can filter IPv6 addresses/masks:
 
 ```bash
-/sbin/route -A inet6 | grepip -6
+$ /sbin/route -A inet6 | grepip -6
 ::1/128
 fe80::223:32ff:fe93:1cf0/128
 fe80::/64
