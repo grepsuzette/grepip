@@ -27,21 +27,30 @@ for i in "$@"; do
         --help | -h ) shift; echo "$helpString" ;;
         --version | -v ) shift; echo "$version"; exit 0 ;;
         -x | --no-local ) shift ; optNoLocal=1;;
+        -4 ) shift ; optIPV4=1;;
+        -6 ) shift ; echo "IPv6 Not implemented yet"; exit; optIPV6=1;;
+        -46 ) shift ; echo "IPv6 Not implemented yet"; exit; optIPV4=1; optIPV6=1;;
         -* ) echo "Unknown option: $1"; exit 1 ;;
         *) ;;
     esac
 done
 
+filter="grep -oE -e '((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])'"
+
 # -x will filter out local IPv4 networks (RFC1918)
+#                and loop back addresses (127.*, as defined by RFC3330)
 # --------------------------------------------------------------------------- 
 # 10.0.0.0 - 10.255.255.255       10.0.0.0/8)    single class A network
 # 172.16.0.0 - 172.31.255.255     172.16.0.0/12  16 contiguous class B networks
 # 192.168.0.0 - 192.168.255.255   192.168.0.0/16 256 contiguous class C networks
 # --------------------------------------------------------------------------- 
 if [[ -n $optNoLocal ]]; then
-    additionalFilters="| grep -vE -e '192.168(\.[0-9]{1,3}){2}' \
-                                  -e '10(\.[0-9]{1,3}){3}' \
-                                  -e '172.(16|17|18|19|2[0-9]|30|31)(\.[0-9]{1,3}){2}' "
+    filterNoLocal=" | grep -vE -e '192.168(\.[0-9]{1,3}){2}' \
+                            -e '10(\.[0-9]{1,3}){3}' \
+                            -e '172.(1[6-9]|2[0-9]|3)(\.[0-9]{1,3}){2}' \
+                            -e '127(\.[0-9]{1,3}){3}'"
 fi
 
-grep -oE '((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])' $additionalFilters
+while read line; do
+    eval "echo \"$line\" | $filter $filterNoLocal"
+done
