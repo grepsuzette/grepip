@@ -1,5 +1,5 @@
 # grepip
-A simple bash filter to show IPv4 addresses or IPv6 addresses/masks using GNU grep, one per line.
+A simple bash filter for IPv4 and IPv6 addresses. This takes anything on stdin, and will only print the addresses to the output.
 
 *Disclaimer: this script is intended for console work only. For integration inside languages use the tools provided by your language (e.g.: in Java see InetAddress, in .NET see IPAddress etc). The reasons for this is 1) any implementation using regular expressions may have bugs and 2) this depends on GNU grep, therefore it depends on the environment and may not be conveniently deployed).*
 
