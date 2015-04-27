@@ -3,21 +3,38 @@
 # Date: 2015-04-23
 # No License
 # No Warranty
+
 #
-# NOTE: change the name of the grep command below if GNU grep has a different name
+##
+###
+#### Options you may want to change vvvvvvv (see below)
+#
+# Change the name of the grep command below if GNU grep has a different name
 # (it won't probably work without modification using non-GNU grep commands)
 grepBinary=grep
+#
+# Change this to 4 if you want IPv4 by default, or to 6 for IPv6 by default
+IPVersion=4
+#
+#### Options you may want to change ^^^^^^ (see above)
+###
+##
+#
 
 progName="$( basename "$0" )"
-version=0.1
+version=0.2
 define(){ IFS='\n' read -r -d '' ${1} || true; }
 
 define helpString <<EOF
-$progName v$version - filter in IPv4 addresses using GNU grep, one per line
-Syntax: $progName [OPTIONS]
+$progName v$version - extract and show IP addresses (IPv4 or IPv6), one per line
+Syntax: somecommand | $progName [OPTIONS]
 
 OPTIONS:
- -x --no-local      Exclude local ips (127.0.*, 10.*, 172.16.*-172.31.*, 192.168.*)
+ -x --no-local      Exclude local IPs
+                     For IPv4, this is 127.0.*, 10.*, 172.16.*-172.31.*, 192.168.*
+                     For IPv6, this is ::/0, ::1/128, fe80:/10, fc00:/7 
+ -4                 Enable IPv4 mode (the default)
+ -6                 Enable IPv6 mode
  --help -h          Show help
  --version -v       Show version and exit
 EOF
@@ -27,30 +44,63 @@ for i in "$@"; do
         --help | -h ) shift; echo "$helpString" ;;
         --version | -v ) shift; echo "$version"; exit 0 ;;
         -x | --no-local ) shift ; optNoLocal=1;;
-        -4 ) shift ; optIPV4=1;;
-        -6 ) shift ; echo "IPv6 Not implemented yet"; exit; optIPV6=1;;
-        -46 ) shift ; echo "IPv6 Not implemented yet"; exit; optIPV4=1; optIPV6=1;;
+        -4 ) shift ; IPVersion=4;;
+        -6 ) shift ; IPVersion=6;;
+        -46 ) shift ; echo "Not implemented yet. Choose between -4 and -6"; exit;;
         -* ) echo "Unknown option: $1"; exit 1 ;;
         *) ;;
     esac
 done
 
-filter="grep -oE -e '((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])'"
+regexIPv4="(?<![0-9]\.)(?<![0-9])((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])(?!\.[0-9])"
+regexIPv6="(\
+([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|\
+([0-9a-fA-F]{1,4}:){1,7}:|\
+([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|\
+([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|\
+([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|\
+([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|\
+([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|\
+[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|\
+:((:[0-9a-fA-F]{1,4}){1,7}|:)|\
+fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|\
+::(ffff(:0{1,4}){0,1}:){0,1}\
+((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}\
+(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|\
+([0-9a-fA-F]{1,4}:){1,4}:\
+((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}\
+(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\
+)"
 
-# -x will filter out local IPv4 networks (RFC1918)
-#                and loop back addresses (127.*, as defined by RFC3330)
-# --------------------------------------------------------------------------- 
-# 10.0.0.0 - 10.255.255.255       10.0.0.0/8)    single class A network
-# 172.16.0.0 - 172.31.255.255     172.16.0.0/12  16 contiguous class B networks
-# 192.168.0.0 - 192.168.255.255   192.168.0.0/16 256 contiguous class C networks
-# --------------------------------------------------------------------------- 
+#filter="grep -oE -e '((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])'"
+
+case $IPVersion in
+    4) filter="grep -oP -e '$regexIPv4'" ;;
+    6) filter="grep -oE -e '$regexIPv6'" ;;
+    *) echo "Error 152"; exit;;
+esac
+
 if [[ -n $optNoLocal ]]; then
-    filterNoLocal=" | grep -vE -e '192.168(\.[0-9]{1,3}){2}' \
-                            -e '10(\.[0-9]{1,3}){3}' \
-                            -e '172.(1[6-9]|2[0-9]|3)(\.[0-9]{1,3}){2}' \
-                            -e '127(\.[0-9]{1,3}){3}'"
+
+    # -x will filter out local IPv4 networks (RFC1918)
+    #                and loop back addresses (127.*, as defined by RFC3330)
+    # --------------------------------------------------------------------------- 
+    # 10.0.0.0 - 10.255.255.255       10.0.0.0/8)    single class A network
+    # 172.16.0.0 - 172.31.255.255     172.16.0.0/12  16 contiguous class B networks
+    # 192.168.0.0 - 192.168.255.255   192.168.0.0/16 256 contiguous class C networks
+    # --------------------------------------------------------------------------- 
+    if [[ $IPVersion -eq 4 ]]; then
+        filterNoLocal=" | grep -vE -e '192.168(\.[0-9]{1,3}){2}' \
+                                   -e '10(\.[0-9]{1,3}){3}' \
+                                   -e '172.(1[6-9]|2[0-9]|3)(\.[0-9]{1,3}){2}' \
+                                   -e '127(\.[0-9]{1,3}){3}'"
+    elif [[ $IPVersion -eq 6 ]]; then
+      #           For IPv6, this is ::/0, ::1/128, fe80:/10, fc00:/7 
+        filterNoLocal=" | grep -vE -e '^(0{0,4}:)+0?0?0?1$'"
+ #       filterNoLocal=" | grep -vE -e '::1'"
+    else
+        echo "Error 153"; exit
+    fi
 fi
 
-while read line; do
-    eval "echo \"$line\" | $filter $filterNoLocal"
-done
+while read line; do eval "echo \"$line\" | $filter $filterNoLocal"; done
