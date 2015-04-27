@@ -1,5 +1,6 @@
 As of current version, IPv6 regexes were obtained from the work of M. David Syzdek
 http://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
+The following is a verbatim from his explanations:
 
 It should match
 
