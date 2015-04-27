@@ -39,6 +39,10 @@ OPTIONS:
  --version -v       Show version and exit
 EOF
 
+
+warn() { local fmt="$1"; shift; printf "$progName: $fmt\n" "$@"     >&2; }
+die () { local st="$?"; warn "$@"; exit "$st"; } 
+
 for i in "$@"; do
     case $i in
         --help | -h ) shift; echo "$helpString" ;;
@@ -46,14 +50,14 @@ for i in "$@"; do
         -x | --no-local ) shift ; optNoLocal=1;;
         -4 ) shift ; IPVersion=4;;
         -6 ) shift ; IPVersion=6;;
-        -46 ) shift ; echo "Not implemented yet. Choose between -4 and -6"; exit;;
-        -* ) echo "Unknown option: $1"; exit 1 ;;
+        -46 ) shift ; die "Not implemented yet. Choose between -4 and -6";;
+        -* ) die "Unknown option: $1";;
         *) ;;
     esac
 done
 
 regexIPv4="(?<![0-9]\.)(?<![0-9])((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])(?!\.[0-9])"
-regexIPv6="(\
+regexIPv6="(?<!:)(\
 ([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|\
 ([0-9a-fA-F]{1,4}:){1,7}:|\
 ([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|\
@@ -70,14 +74,14 @@ fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|\
 ([0-9a-fA-F]{1,4}:){1,4}:\
 ((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}\
 (25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\
-)"
+)(?!:)"
 
 #filter="grep -oE -e '((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])'"
 
 case $IPVersion in
     4) filter="grep -oP -e '$regexIPv4'" ;;
-    6) filter="grep -oE -e '$regexIPv6'" ;;
-    *) echo "Error 152"; exit;;
+    6) filter="grep -oP -e '$regexIPv6'" ;;
+    *) die "Unknown IPVersion: $IPVersion";;
 esac
 
 if [[ -n $optNoLocal ]]; then
@@ -98,8 +102,8 @@ if [[ -n $optNoLocal ]]; then
       #           For IPv6, this is ::/0, ::1/128, fe80:/10, fc00:/7 
         filterNoLocal=" | grep -vE -e '^(0{0,4}:)+0?0?0?1$'"
  #       filterNoLocal=" | grep -vE -e '::1'"
-    else
-        echo "Error 153"; exit
+    else 
+        die "Unknown IPVersion: $IPVersion"
     fi
 fi
 
