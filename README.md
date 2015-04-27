@@ -37,14 +37,7 @@ $ nslookup rackspace.com | grepip -x
 IPv6 examples
 -------------
 
-As of now, we don't make a distinction between IPv6 addresses and masks, though
-that distinction may be introduced in a future version.
-
-```bash
-$ ifconfig | grepip -6
-fe80::223:32ff:fe92:14f1
-::1
-```
+Note we don't yet make a distinction between IPv6 addresses (e.g.: ::1) and masks (e.g.: ::1/128). That distinction may be introduced in a future version.
 
 Say we have this command:
 
@@ -72,7 +65,7 @@ ff00::/8
 
 Finally, we can filter non-locale addresses with -x:
 
+```bash
 $ /sbin/route -A inet6 | grepip -6 -x
 ff00::/8
-
-
+```
