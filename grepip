@@ -13,7 +13,7 @@
 # (it won't probably work without modification using non-GNU grep commands)
 grepBinary=grep
 #
-# Change this to 4 if you want IPv4 by default, or to 6 for IPv6 by default
+# Change this to 6 to switch to IPv6 by default (otherwise add -6 to the CLI)
 IPVersion=4
 #
 #### Options you may want to change ^^^^^^ (see above)
@@ -35,7 +35,7 @@ OPTIONS:
                      For IPv6, this is ::/0, ::1/128, fe80:/10, fc00:/7 
  -4                 Enable IPv4 mode (the default)
  -6                 Enable IPv6 mode
- --help -h          Show help
+ --help -h          Show help and exit
  --version -v       Show version and exit
 EOF
 
@@ -45,19 +45,19 @@ die () { local st="$?"; warn "$@"; exit "$st"; }
 
 for i in "$@"; do
     case $i in
-        --help | -h ) shift; echo "$helpString" ;;
+        --help | -h ) shift; echo "$helpString" ; exit 0 ;;
         --version | -v ) shift; echo "$version"; exit 0 ;;
         -x | --no-local ) shift ; optNoLocal=1;;
         -4 ) shift ; IPVersion=4;;
         -6 ) shift ; IPVersion=6;;
-        -46 ) shift ; die "Not implemented yet. Choose between -4 and -6";;
+        -46 ) shift ; die "Not implemented. Choose between -4 and -6";;
         -* ) die "Unknown option: $1";;
         *) ;;
     esac
 done
 
 regexIPv4="(?<![0-9]\.)(?<![0-9])((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])(?!\.[0-9])"
-regexIPv6="(?<!:)(\
+regexIPv6="(\
 ([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|\
 ([0-9a-fA-F]{1,4}:){1,7}:|\
 ([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|\
@@ -74,13 +74,11 @@ fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|\
 ([0-9a-fA-F]{1,4}:){1,4}:\
 ((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}\
 (25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\
-)(?!:)"
-
-#filter="grep -oE -e '((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])'"
+)(/(12[0-8]|1[01][0-9]|[0-9][0-9]|[0-9]))?"
 
 case $IPVersion in
     4) filter="grep -oP -e '$regexIPv4'" ;;
-    6) filter="grep -oP -e '$regexIPv6'" ;;
+    6) filter="grep -oE -e '$regexIPv6' | grep -v -e '::/[^0-9]' -e '^::$'" ;;
     *) die "Unknown IPVersion: $IPVersion";;
 esac
 
@@ -99,9 +97,11 @@ if [[ -n $optNoLocal ]]; then
                                    -e '172.(1[6-9]|2[0-9]|3)(\.[0-9]{1,3}){2}' \
                                    -e '127(\.[0-9]{1,3}){3}'"
     elif [[ $IPVersion -eq 6 ]]; then
-      #           For IPv6, this is ::/0, ::1/128, fe80:/10, fc00:/7 
-        filterNoLocal=" | grep -vE -e '^(0{0,4}:)+0?0?0?1$'"
- #       filterNoLocal=" | grep -vE -e '::1'"
+        # ::1/128, ::/0, fe80:/10, fc00:/7 
+        filterNoLocal=" | grep -viE -e '^(0{0,4}:)+0?0?0?1(/[0-9]+)?$' \
+                                    -e '^(0{0,4}:)+0{0,4}(/[0-9]+)?$' \
+                                    -e '^fe80:' \
+                                    -e '^fc00:'"
     else 
         die "Unknown IPVersion: $IPVersion"
     fi
