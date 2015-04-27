@@ -3,24 +3,6 @@ A simple bash filter for IPv4 and IPv6 addresses. This takes anything on stdin, 
 
 *Disclaimer: this script is intended for console work only. For integration inside languages use the tools provided by your language (e.g.: in Java see InetAddress, in .NET see IPAddress etc). The reasons for this is 1) any implementation using regular expressions may have bugs and 2) this depends on GNU grep, therefore it depends on the environment and may not be conveniently deployed).*
 
-Usage
--------
-```bash
-$ grepip -h
-grepip v0.2 - extract and show IP addresses (IPv4 or IPv6), one per line
-Syntax: somecommand | grepip [OPTIONS]
-
-OPTIONS:
- -x --no-local      Exclude local IPs
-                     For IPv4 exclude 127.0.*, 10.*, 172.16.*-172.31.*,
-192.168.*
-                     For IPv6 exclude ::/0, ::1/128, fe80:/10, fc00:/7 
- -4                 Enable IPv4 mode (the default)
- -6                 Enable IPv6 mode
- --help -h          Show help and exit
- --version -v       Show version and exit
-```
-
 IPv4 examples
 ----------
 
@@ -86,4 +68,19 @@ Finally, we can filter non-locale addresses with -x:
 ```bash
 $ /sbin/route -A inet6 | grepip -6 -x
 ff00::/8
+```
+
+Usage
+-------
+```bash
+$ grepip -h
+grepip v0.2 - extract and show IP addresses (IPv4 or IPv6), one per line
+Syntax: somecommand | grepip [OPTIONS]
+
+OPTIONS:
+ -x --no-local      Exclude local IPs
+ -4                 Enable IPv4 mode (the default)
+ -6                 Enable IPv6 mode
+ --help -h          Show help and exit
+ --version -v       Show version and exit
 ```
